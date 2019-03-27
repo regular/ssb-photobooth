@@ -1,0 +1,20 @@
+{
+  "name": "ssb-photobooth",
+  "version": "1.0.0",
+  "description": "sbot plugin that invokes gphoto2 to capture an image and can send this image via email",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/regular/ssb-photobooth.git"
+  },
+  "keywords": [],
+  "author": "Jan Bölsche <jan@lagomorph.de> (https://regular.codes/)",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/regular/ssb-photobooth/issues"
+  },
+  "homepage": "https://github.com/regular/ssb-photobooth#readme"
+}
