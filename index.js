@@ -34,6 +34,8 @@ exports.init = function (ssb, config) {
       '--force-overwrite'
     ]
     console.log('Capturing to ', filename)
+    try {fs.unlinkSync(filename)} catch(e) {}
+    
     execFile(gphoto2Path, args, {}, (err, stdout, stderr) => {
       if (err) {
         console.error(err.message)
@@ -41,7 +43,13 @@ exports.init = function (ssb, config) {
         res.statusCode = 503
         return res.end(stdout + '\n' + stderr)
       }
-      const stats = fs.statSync(filename)
+      let stats
+      try {
+        stats = fs.statSync(filename)
+      } catch(e) {
+        res.statusCode = 404
+        return res.end(e.message)
+      }
       res.setHeader('Content-Type', 'image/jpeg')
       res.setHeader('Content-Length', stats.size)
       res.statusCode = 200
@@ -63,6 +71,13 @@ exports.init = function (ssb, config) {
     const text = opts.text || 'A picture!'
     const recipient = opts.recipient || 'regular.gonzales@gmail.com'
     const filename = join(destDir, photoId + '.jpg')
+
+    try {
+      fs.statSync(filename)
+    } catch(e) {
+      return cb(e)
+    }
+    
     const args = [
       '-s', subject,
       '-a', filename,
@@ -75,6 +90,8 @@ exports.init = function (ssb, config) {
         console.error(stderr)
         return cb(err)
       }
+      // might want to send more than once
+      // try {fs.unlinkSync(filename)} catch(e) {}
       return cb(null)
     })
     mail.stdin.write(text)
