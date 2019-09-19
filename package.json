@@ -1,6 +1,6 @@
 {
   "name": "ssb-photobooth",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "sbot plugin that invokes gphoto2 to capture an image and can send this image via email",
   "main": "index.js",
   "scripts": {
