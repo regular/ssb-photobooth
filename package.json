@@ -16,8 +16,5 @@
   "bugs": {
     "url": "https://github.com/regular/ssb-photobooth/issues"
   },
-  "homepage": "https://github.com/regular/ssb-photobooth#readme",
-  "dependencies": {
-    "multicb": "^1.2.2"
-  }
+  "homepage": "https://github.com/regular/ssb-photobooth#readme"
 }

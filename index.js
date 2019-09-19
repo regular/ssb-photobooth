@@ -2,7 +2,6 @@ const {join} = require('path')
 const {execFile, exec} = require('child_process')
 const fs = require('fs')
 const url = require('url')
-const multicb = require('multicb')
 
 // sbot plugin interface
 exports.name = 'photobooth'
@@ -72,7 +71,7 @@ exports.init = function (ssb, config) {
     const subject = opts.subject || 'ssb-photobooth'
     const text = opts.text || 'A picture!'
     const recipient = opts.recipient || 'regular.gonzales@gmail.com'
-    const filename = join(destDir, photoId + '.jpg')
+    let filename = join(destDir, photoId + '.jpg')
 
     try {
       fs.statSync(filename)
@@ -80,34 +79,40 @@ exports.init = function (ssb, config) {
       return cb(e)
     }
 
-    const done = multicb({pluck:1})
-
     if (postProcessScript) {
       console.log(`exec ${postProcessScript} ${filename}`)
-      exec(`${postProcessScript} ${filename}`, done())
+      exec(`${postProcessScript} ${filename}`, (err, stdout) =>{
+        if (err) {
+          console.error(err.message)
+          return cb(err)
+        }
+        filename = stdout.trim()
+        _sendMail(cb)
+      })
     } else {
       console.log('No postProcessScript')
+      _sendMail(cb)
     }
-    
-    const args = [
-      '-s', subject,
-      '-a', filename,
-      recipient
-    ]
 
-    const mail = execFile(mailPath, args, {}, done())
+    function _sendMail(cb) {
+      const args = [
+        '-s', subject,
+        '-a', filename,
+        recipient
+      ]
 
-    done((err, results) => {
-      if (err) {
-        console.error(err.message)
-        return cb(err)
-      }
-      // might want to send more than once
-      // try {fs.unlinkSync(filename)} catch(e) {}
-      return cb(null)
-    })
-    mail.stdin.write(text)
-    mail.stdin.end()
+      const mail = execFile(mailPath, args, {}, err => {
+        if (err) {
+          console.error(err.message)
+          return cb(err)
+        }
+        // might want to send more than once
+        // try {fs.unlinkSync(filename)} catch(e) {}
+        return cb(null)
+      })
+      mail.stdin.write(text)
+      mail.stdin.end()
+    }
   }
 
   return {
