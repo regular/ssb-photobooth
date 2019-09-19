@@ -1,7 +1,8 @@
 const {join} = require('path')
-const {execFile} = require('child_process')
+const {execFile, exec} = require('child_process')
 const fs = require('fs')
 const url = require('url')
+const multicb = require('multicb')
 
 // sbot plugin interface
 exports.name = 'photobooth'
@@ -11,12 +12,13 @@ exports.manifest = {
 }
 
 exports.init = function (ssb, config) {
-  const cfg = config.photbooth || {}
+  const cfg = config.photobooth || {}
 
   const gphoto2Path = cfg.gphoto2Path || '/usr/bin/gphoto2'
   const mailPath = cfg.mailPath || '/usr/bin/mail'
   const urlPrefix = cfg.urlPrefix || '/photobooth/'
   const destDir = cfg.destDir || '/tmp'
+  const {postProcessScript} = cfg
 
   ssb.ws.use((req, res, next) =>  {
     if(!(req.method === "GET" || req.method == 'HEAD')) return next()
@@ -77,6 +79,15 @@ exports.init = function (ssb, config) {
     } catch(e) {
       return cb(e)
     }
+
+    const done = multicb({pluck:1})
+
+    if (postProcessScript) {
+      console.log(`exec ${postProcessScript} ${filename}`)
+      exec(`${postProcessScript} ${filename}`, done())
+    } else {
+      console.log('No postProcessScript')
+    }
     
     const args = [
       '-s', subject,
@@ -84,10 +95,11 @@ exports.init = function (ssb, config) {
       recipient
     ]
 
-    const mail = execFile(mailPath, args, {}, (err, stdout, stderr) => {
+    const mail = execFile(mailPath, args, {}, done())
+
+    done((err, results) => {
       if (err) {
         console.error(err.message)
-        console.error(stderr)
         return cb(err)
       }
       // might want to send more than once
